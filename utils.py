@@ -1,14 +1,19 @@
 import re
 import datetime
+import pymorphy2
 from typing import Optional
+
+morph = pymorphy2.MorphAnalyzer()
 
 ru_numbers = {
     'один': 1,
     'два': 2,
     'три': 3,
     'четыре': 4,
-    'пять': 4,
+    'пять': 5,
 }
+
+cities = {"москва", "париж", "берлин"}
 
 
 def extract_datetime(string: str) -> Optional[datetime.datetime]:
@@ -75,14 +80,23 @@ def extract_datetime(string: str) -> Optional[datetime.datetime]:
         if time_qualifier in time_qualifier_am:
             date = date.replace(hour=9, minute=0, second=0)
         elif time_qualifier in time_qualifier_noon:
-            date = date.replace(hour=12, minute=0, second=0)
+            date = date.replace(hour=15, minute=0, second=0)
         elif time_qualifier in time_qualifier_pm:
             date = date.replace(hour=21, minute=0, second=0)
     return date
 
 
+def extract_city(string: str) -> Optional[str]:
+    words = [morph.parse(w)[0].normal_form for w in re.split("\W", string) if w != ""]
+    if len(words) == 0:
+        return
+    for city in cities:
+        if city in words:
+            return city
+
+
 if __name__ == "__main__":
-    date = extract_datetime("прогноз погоды через четыре дня вечером")
+    date = extract_datetime("какая завтра погода в париже")
     print(date)
 
 

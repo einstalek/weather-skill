@@ -4,14 +4,15 @@ class Builder:
         self.next = None
         self.prev = None
 
-
-        words = [w for w in open("vocab/" + self.vocab + ".voc").read().split('\n') if w != '']
+        words = [w for w in open("vocab/" + self.vocab.lower() + ".voc").read().split('\n') if w != '']
         self.check = lambda string: any(w in string for w in words)
+        self.len = 1
 
     def require(self, vocab):
         next = Builder(vocab)
         self.next = next
         next.prev = self
+        self.len += 1
         return next
 
     def match(self, string: str) -> bool:
@@ -23,15 +24,15 @@ class Builder:
             current = current.prev
         return True
 
-    def __str__(self):
-        current = self
-        res = ""
-        while current is not None:
-            res += " " + current.vocab
-            current = current.prev
-        return res
 
+class IntentBuilder:
+    def __init__(self, builder: Builder):
+        self.builder = builder
 
-if __name__ == "__main__":
-    builder = Builder("forecast").require("weather").require("temp")
-    print(builder)
+    def __call__(self, func):
+        def wrapper(string: str):
+            if not self.builder.match(string.lower()):
+                return False
+            return func(string.lower())
+        return wrapper
+
