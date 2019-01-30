@@ -1,7 +1,7 @@
 import re
 import datetime
 import pymorphy2
-from typing import Optional
+from typing import Optional, Dict
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -70,11 +70,9 @@ def extract_datetime(string: str) -> Optional[datetime.datetime]:
                 day_offset = ru_numbers[word_next]
                 used += 1
 
-    if used == 0:
-        return
-
     if not day_offset:
         day_offset = 0
+
     date = datetime.datetime.now() + datetime.timedelta(days=day_offset)
     if time_qualifier:
         if time_qualifier in time_qualifier_am:
@@ -83,6 +81,8 @@ def extract_datetime(string: str) -> Optional[datetime.datetime]:
             date = date.replace(hour=15, minute=0, second=0)
         elif time_qualifier in time_qualifier_pm:
             date = date.replace(hour=21, minute=0, second=0)
+    else:
+        date = date.replace(hour=12, minute=0)
     return date
 
 
@@ -95,8 +95,21 @@ def extract_city(string: str) -> Optional[str]:
             return city
 
 
+class Forecast:
+    def parse(self, forecast: Dict):
+        self.detailed_status = forecast.get("detailed_status")
+        self.weather_icon = forecast.get("weather_icon_name")
+        self.temp  = forecast.get("temperature").get("temp") - 273
+        self.temp_min = forecast.get("temperature").get("temp_min") - 273
+        self.temp_max = forecast.get("temperature").get("temp_max") - 273
+        self.pressure = forecast.get("pressure").get("press")
+        self.humidity = forecast.get("humidity")
+        self.speed = forecast.get("wind").get("speed")
+        return self
+
+
 if __name__ == "__main__":
-    date = extract_datetime("какая завтра погода в париже")
+    date = extract_datetime("погода в париже")
     print(date)
 
 

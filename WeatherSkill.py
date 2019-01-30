@@ -4,7 +4,7 @@ from Builder import IntentBuilder, Builder
 import pyowm
 from pyowm.exceptions.api_response_error import NotFoundError
 
-from utils import extract_datetime, extract_city
+from utils import extract_datetime, extract_city, Forecast
 
 
 def assign_value(d: Dict, keys: List, value):
@@ -66,34 +66,31 @@ class WeatherSkill:
         Погода в Париже
         :return:
         """
-        city = extract_city(string)
-        forecast = None
-        if city:
-            forecast = WeatherSkill.api.weather_at_place(city)
-        return forecast
+        forecast = WeatherSkill.get_forecast(string)
+        parsed = Forecast().parse(forecast)
+        return "Сейчас наблюдается %s. Температура %.1f градусов" % (parsed.detailed_status, parsed.temp)
+
 
     @staticmethod
     @IntentBuilder(Builder("forecast").require("weather"))
     def handle_forecast(string: str):
-        return WeatherSkill.future_forecast(string)
+        return WeatherSkill.get_forecast(string)
 
     @staticmethod
     @IntentBuilder(Builder("weather").require("will"))
     def handle_forecast_alternative(string: str):
-        return WeatherSkill.future_forecast(string)
+        return WeatherSkill.get_forecast(string)
 
     @staticmethod
-    def future_forecast(string: str):
+    def get_forecast(string: str):
         city = extract_city(string)
         if city is None:
             city = "Moscow,ru"
         date = extract_datetime(string)
-        if date is None:
-            date = datetime.datetime.now() + datetime.timedelta(days=1)
         forecast = WeatherSkill.api.weather_forecast(date, city)
         return forecast
 
 
 if __name__ == "__main__":
-    forecast = WeatherSkill().handle_forecast_alternative("какая погода будет завтра")
+    forecast = WeatherSkill().handle_current_weather("погода в париже")
     print(forecast)
