@@ -108,6 +108,12 @@ class Forecast:
         return self
 
 
+class Profile:
+    def __init__(self):
+        self.city = 'Moscow,ru'
+        date = None
+
+
 if __name__ == "__main__":
     date = extract_datetime("погода в париже")
     print(date)

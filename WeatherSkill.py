@@ -4,7 +4,7 @@ from Builder import IntentBuilder, Builder
 import pyowm
 from pyowm.exceptions.api_response_error import NotFoundError
 
-from utils import extract_datetime, extract_city, Forecast
+from utils import extract_datetime, extract_city, Forecast, Profile
 
 
 def assign_value(d: Dict, keys: List, value):
@@ -58,6 +58,7 @@ class OWMApi:
 
 class WeatherSkill:
     api = OWMApi()
+    profile = None
 
     @staticmethod
     @IntentBuilder(Builder("weather"))
@@ -68,21 +69,24 @@ class WeatherSkill:
         """
         forecast = WeatherSkill.get_forecast(string)
         parsed = Forecast().parse(forecast)
-        return "Сейчас наблюдается %s. Температура %.1f градусов" % (parsed.detailed_status, parsed.temp)
-
+        return "Сейчас за окном %s, температура %.1f градусов" % (parsed.detailed_status, parsed.temp)
 
     @staticmethod
     @IntentBuilder(Builder("forecast").require("weather"))
     def handle_forecast(string: str):
-        return WeatherSkill.get_forecast(string)
+        forecast = WeatherSkill.get_forecast(string)
+        parsed = Forecast().parse(forecast)
+        return "По прогнозу будет %s, температура %.1f" % (parsed.detailed_status, parsed.temp)
 
     @staticmethod
     @IntentBuilder(Builder("weather").require("will"))
-    def handle_forecast_alternative(string: str):
-        return WeatherSkill.get_forecast(string)
+    def handle_weather_will(string: str):
+        forecast = WeatherSkill.get_forecast(string)
+        parsed = Forecast().parse(forecast)
+        return "По прогнозу будет %s, температура %.1f" % (parsed.detailed_status, parsed.temp)
 
     @staticmethod
-    def get_forecast(string: str):
+    def get_forecast(string: str) -> dict:
         city = extract_city(string)
         if city is None:
             city = "Moscow,ru"
@@ -92,5 +96,5 @@ class WeatherSkill:
 
 
 if __name__ == "__main__":
-    forecast = WeatherSkill().handle_current_weather("погода в париже")
-    print(forecast)
+    x = WeatherSkill().handle_current_weather("какая погода будет завтра в париже")
+    print(x)
